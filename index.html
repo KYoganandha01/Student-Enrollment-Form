@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Enrollment Form</title>
+</head>
+<body>
+  <h2>Student Enrollment Form</h2>
+  <form id="enrollForm">
+    <label>Roll No: <input type="text" id="rollNo" required></label><br><br>
+    <label>Full Name: <input type="text" id="fullName" disabled required></label><br><br>
+    <label>Class: <input type="text" id="class" disabled required></label><br><br>
+    <label>Birth Date: <input type="date" id="birthDate" disabled required></label><br><br>
+    <label>Address: <input type="text" id="address" disabled required></label><br><br>
+    <label>Enrollment Date: <input type="date" id="enrollmentDate" disabled required></label><br><br>
+
+    <button type="button" id="saveBtn" disabled>Save</button>
+    <button type="button" id="updateBtn" disabled>Update</button>
+    <button type="button" id="resetBtn" disabled>Reset</button>
+  </form>
+
+  <script>
+    const rollNo = document.getElementById('rollNo');
+    const fullName = document.getElementById('fullName');
+    const classInput = document.getElementById('class');
+    const birthDate = document.getElementById('birthDate');
+    const address = document.getElementById('address');
+    const enrollmentDate = document.getElementById('enrollmentDate');
+    const saveBtn = document.getElementById('saveBtn');
+    const updateBtn = document.getElementById('updateBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    rollNo.focus();
+
+    const disableForm = () => {
+      [fullName, classInput, birthDate, address, enrollmentDate].forEach(f => f.disabled = true);
+      saveBtn.disabled = true;
+      updateBtn.disabled = true;
+      resetBtn.disabled = true;
+    };
+
+    const enableForm = () => {
+      [fullName, classInput, birthDate, address, enrollmentDate].forEach(f => f.disabled = false);
+      resetBtn.disabled = false;
+    };
+
+    const clearForm = () => {
+      rollNo.value = '';
+      fullName.value = '';
+      classInput.value = '';
+      birthDate.value = '';
+      address.value = '';
+      enrollmentDate.value = '';
+      rollNo.disabled = false;
+      rollNo.focus();
+      disableForm();
+    };
+
+    rollNo.addEventListener('change', async () => {
+      const val = rollNo.value.trim();
+      if (!val) return;
+      const res = await fetch(`http://localhost:3000/student/${val}`);
+      if (res.ok) {
+        const student = await res.json();
+        fullName.value = student.fullName;
+        classInput.value = student.class;
+        birthDate.value = student.birthDate;
+        address.value = student.address;
+        enrollmentDate.value = student.enrollmentDate;
+
+        enableForm();
+        rollNo.disabled = true;
+        updateBtn.disabled = false;
+      } else {
+        enableForm();
+        rollNo.disabled = true;
+        saveBtn.disabled = false;
+      }
+    });
+
+    saveBtn.addEventListener('click', async () => {
+      const data = {
+        rollNo: rollNo.value.trim(),
+        fullName: fullName.value.trim(),
+        class: classInput.value.trim(),
+        birthDate: birthDate.value,
+        address: address.value.trim(),
+        enrollmentDate: enrollmentDate.value
+      };
+
+      if (Object.values(data).some(v => !v)) {
+        alert('Please fill all fields.');
+        return;
+      }
+
+      const res = await fetch('http://localhost:3000/student', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) alert('Student saved successfully!');
+      else alert('Error saving student!');
+      clearForm();
+    });
+
+    updateBtn.addEventListener('click', async () => {
+      const data = {
+        fullName: fullName.value.trim(),
+        class: classInput.value.trim(),
+        birthDate: birthDate.value,
+        address: address.value.trim(),
+        enrollmentDate: enrollmentDate.value
+      };
+
+      if (Object.values(data).some(v => !v)) {
+        alert('Please fill all fields.');
+        return;
+      }
+
+      const res = await fetch(`http://localhost:3000/student/${rollNo.value}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) alert('Student updated successfully!');
+      else alert('Error updating student!');
+      clearForm();
+    });
+
+    resetBtn.addEventListener('click', clearForm);
+  </script>
+</body>
+</html>
